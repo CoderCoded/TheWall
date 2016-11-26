@@ -10,6 +10,10 @@ public class GraveStoneController : MonoBehaviour {
 
     private Vector3 initialPos;
 
+    public GameObject explosion;
+
+    public GameObject dude;
+
     public int x;
     public int z;
 
@@ -43,6 +47,21 @@ public class GraveStoneController : MonoBehaviour {
           {
               //gridController.OnBlockLanded(gameObject);
           });
+    }
+
+    public void Explode()
+    {
+        GameObject exp = (GameObject)Instantiate(explosion, gameObject.transform.position, explosion.transform.rotation);
+        //splatter.transform.parent = gameObject.transform;
+        exp.SetActive(true);
+
+        ParticleSystem expPS = exp.GetComponent<ParticleSystem>();
+
+        float duration = expPS.duration;
+
+
+        Destroy(expPS, duration);
+        Destroy(gameObject, duration  / 2);
     }
 
 }

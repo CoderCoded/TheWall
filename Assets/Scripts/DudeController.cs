@@ -42,15 +42,20 @@ public class DudeController : MonoBehaviour {
 
     public void Kill ()
     {
-        GameObject splatter = (GameObject)Instantiate(bloodSplatter, gameObject.transform.position, Quaternion.identity);
+        GameObject splatter = (GameObject)Instantiate(bloodSplatter, gameObject.transform.position, bloodSplatter.transform.rotation);
         //splatter.transform.parent = gameObject.transform;
         splatter.SetActive(true);
-        float duration = splatter.GetComponent<ParticleSystem>().duration;
-        Destroy(splatter, duration);
+
+        ParticleSystem splatterPS = splatter.GetComponent<ParticleSystem>();
+
+        float duration = splatterPS.duration;
+
+        Destroy(splatter, duration * 3);
         gameObject.SetActive(false);
     }
 
-    void Respawn()
+    // The RESURRECTION
+    public void Respawn()
     {
         gameObject.SetActive(true);
     }

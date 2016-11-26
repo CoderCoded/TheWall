@@ -43,6 +43,8 @@ public class GridController : MonoBehaviour {
 
     private float minKillDistance = 1.0f;
 
+    private bool explosionOnGoing = false;
+
     private WallDirection selectedDirection = WallDirection.xAxis;
 
     // Use this for initialization
@@ -167,7 +169,7 @@ public class GridController : MonoBehaviour {
         //grid[index].SetActive(true);
     }
 
-    void SpawnGraveStone (GameObject block)
+    void SpawnGraveStone (GameObject block, GameObject dude)
     {
 
         int x = block.GetComponent<BlockController>().x;
@@ -191,6 +193,7 @@ public class GridController : MonoBehaviour {
         graveStoneController.x = x;
         graveStoneController.z = z;
         graveStoneController.initialY = initialY;
+        graveStoneController.dude = dude; // For respawn, who died?
         graveStoneController.Spawn();
     }
 
@@ -278,6 +281,8 @@ public class GridController : MonoBehaviour {
     // Update is called once per frame
     void Update () {
 
+        if (explosionOnGoing) return;
+
         if (Input.GetMouseButton(0))
         {
             RaycastHit hit;
@@ -291,7 +296,19 @@ public class GridController : MonoBehaviour {
                 lastX = (int)gridPos.x;
                 lastZ = (int)gridPos.z;
 
-                ShowMarker(lastX, lastZ);
+                if (Input.GetMouseButtonDown(0))
+                {
+                    GraveStoneController graveStoneController = GetGraveStoneController(lastX, lastZ);
+                    if (graveStoneController != null)
+                    {
+                        HideMarker();
+                        StartCoroutine(ExplodeGraveStoneAndRespawnDude(graveStoneController));
+                    }
+                }
+                else
+                {
+                    ShowMarker(lastX, lastZ);
+                }
 
             }
         } else if (showingMarker)
@@ -301,6 +318,24 @@ public class GridController : MonoBehaviour {
             lastX = -1;
             lastZ = -1;
         }
+    }
+
+    IEnumerator ExplodeGraveStoneAndRespawnDude(GraveStoneController graveStoneController)
+    {
+        explosionOnGoing = true;
+        GameObject dude = graveStoneController.dude;
+        graveStoneController.Explode();
+        yield return new WaitForSeconds(2.0f);
+        dude.GetComponent<DudeController>().Respawn();
+        yield return new WaitForSeconds(1.0f);
+        explosionOnGoing = false;
+    }
+
+    GraveStoneController GetGraveStoneController(int x, int z)
+    {
+        int index = gridWidth * z + x;
+        if (grid[index] == null) return null;
+        return grid[index].GetComponent<GraveStoneController>();
     }
 
     bool IsOnGrid(int x, int z)
@@ -321,7 +356,7 @@ public class GridController : MonoBehaviour {
             if (dist < minKillDistance)
             {
                 dude.GetComponent<DudeController>().Kill();
-                SpawnGraveStone(block);
+                SpawnGraveStone(block, dude);
             }
         }
     }

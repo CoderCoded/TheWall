@@ -41,7 +41,7 @@ public class GridController : MonoBehaviour {
     private int lastX;
     private int lastZ;
 
-    private float minKillDistance = 1.0f;
+    public float minKillDistance = 1.0f;
 
     private bool explosionOnGoing = false;
 
@@ -217,6 +217,7 @@ public class GridController : MonoBehaviour {
 
     void SpawnWall (int startX, int startZ, WallDirection wallDirection)
     {
+        if (explosionOnGoing) return;
         if (!IsOnGrid(startX, startZ)) return;
         if (wallDirection == WallDirection.xAxis)
         {
@@ -298,8 +299,6 @@ public class GridController : MonoBehaviour {
 
     // Update is called once per frame
     void Update () {
-
-        if (explosionOnGoing) return;
 
         if (Input.GetMouseButton(0))
         {
@@ -410,6 +409,7 @@ public class GridController : MonoBehaviour {
 
     void ShowMarker(int x, int z)
     {
+        if (explosionOnGoing) return;
         if (IsOnGrid(x, z))
         {
             showingMarker = true;

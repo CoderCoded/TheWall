@@ -11,9 +11,14 @@ public class BlockController : MonoBehaviour {
 
     public float initialY;
 
+    public int x;
+    public int z;
+
+    private GridController gridController;
+
 	// Use this for initialization
 	void Start () {
-
+        gridController = GameObject.Find("Grid").GetComponent<GridController>();
     }
 
     void Awake ()
@@ -55,7 +60,7 @@ public class BlockController : MonoBehaviour {
               transform.position = new Vector3(initialPos.x, yPos, initialPos.z);
           }, (t) =>
           {
-              //Debug.Log("Finished move.");
+              gridController.OnBlockLanded(gameObject);
           });
     }
 

@@ -1,5 +1,6 @@
 ﻿using UnityEngine;
 using System.Collections;
+using System.Collections.Generic;
 
 using DigitalRuby.Tween;
 
@@ -14,11 +15,13 @@ public class GridController : MonoBehaviour {
 
     public GameObject testDude;
 
+    public GameObject graveStone;
+
     private GameObject[] grid;
 
-    public Vector2 gridSize = new Vector2(40, 40);
+    private List<GameObject> dudes;
 
-    public bool[] dudeSpawns;
+    public Vector2 gridSize = new Vector2(40, 40);
 
     public float gridSpacing = 3.0f;
 
@@ -37,6 +40,8 @@ public class GridController : MonoBehaviour {
 
     private int lastX;
     private int lastZ;
+
+    private float minKillDistance = 1.0f;
 
     private WallDirection selectedDirection = WallDirection.xAxis;
 
@@ -58,16 +63,14 @@ public class GridController : MonoBehaviour {
 
         grid = new GameObject[gridWidth * gridHeight];
 
-        // For preventing spawing on top of each other
-        dudeSpawns = new bool[gridWidth * gridHeight];
-        
+        dudes = new List<GameObject>();
 
         if (testDude != null) SpawnSomeDudes(50);
 
         if (gridBlock == null) return;
 
         //StartCoroutine(SpawnSomeWalls(10, 2.0f));
-        //SpawnAllRandom();
+        //SpawnAllBricksRandom();
 
     }
 
@@ -107,7 +110,7 @@ public class GridController : MonoBehaviour {
         }
     }
 
-    void SpawnAllRandom()
+    void SpawnAllBricksRandom()
     {
         for (int i = 0; i < gridHeight; i++)
         {
@@ -120,14 +123,29 @@ public class GridController : MonoBehaviour {
 
     void SpawnDude (int x, int z)
     {
-        GameObject Dude = (GameObject)Instantiate(testDude);
-        Dude.transform.parent = gameObject.transform;
+        GameObject dude = (GameObject)Instantiate(testDude);
+        dude.transform.parent = gameObject.transform;
         // Unity is Z-forward
         float initialY = 1.4f;
         //float initialY = 40.0f;
-        Dude.transform.localPosition = GetLocalPosFromGridPos(x, z, initialY);
+        Vector3 startPos = GetLocalPosFromGridPos(x, z, initialY);
+
+        foreach (GameObject oldDude in dudes)
+        {
+            float dist = Vector3.Distance(oldDude.GetComponent<DudeController>().startPosition, startPos);
+            if (dist < 1.0f)
+            {
+                // Just destroy the duplicate for now
+                Destroy(dude);
+                return;
+            }
+        }
+
+        dude.transform.localPosition = startPos;
         //Dude.transform.localPosition = new Vector3(gridSpacing * x, initialY, gridSpacing * z);
-        Dude.SetActive(true);
+        dude.GetComponent<DudeController>().startPosition = startPos;
+        dude.SetActive(true);
+        dudes.Add(dude);
     }
 
     void SpawnBrick (int x, int z, float delay, bool randomDelay)
@@ -141,9 +159,39 @@ public class GridController : MonoBehaviour {
         //float initialY = 40.0f - (z) / 3.0f;
         float initialY = spawnHeight;
         grid[index].transform.localPosition = GetLocalPosFromGridPos(x, z, initialY);
-        grid[index].GetComponent<BlockController>().initialY = initialY;
+        BlockController blockController = grid[index].GetComponent<BlockController>();
+        blockController.x = x;
+        blockController.z = z;
+        blockController.initialY = initialY;
         grid[index].GetComponent<BlockController>().Spawn(delay, randomDelay);
         //grid[index].SetActive(true);
+    }
+
+    void SpawnGraveStone (GameObject block)
+    {
+
+        int x = block.GetComponent<BlockController>().x;
+        int z = block.GetComponent<BlockController>().z;
+
+        int index = gridWidth * z + x;
+
+        if (grid[index] == null) return;
+
+        Destroy(grid[index]);
+
+        grid[index] = (GameObject)Instantiate(graveStone);
+        grid[index].SetActive(true);
+        grid[index].transform.parent = gameObject.transform;
+
+        // From ground
+        float initialY = -3.0f;
+        grid[index].transform.localPosition = GetLocalPosFromGridPos(x, z, initialY);
+
+        GraveStoneController graveStoneController = grid[index].GetComponent<GraveStoneController>();
+        graveStoneController.x = x;
+        graveStoneController.z = z;
+        graveStoneController.initialY = initialY;
+        graveStoneController.Spawn();
     }
 
     void SpawnWall (int startX, int startZ, WallDirection wallDirection)
@@ -175,7 +223,8 @@ public class GridController : MonoBehaviour {
                     SpawnBrick(j, startZ, brickSpawnInterval * delayFactor, false);
                 }
             }
-        } else
+        }
+        else
         {
             // Z forward
             for (int k = startZ; k < gridWidth; k++)
@@ -258,6 +307,23 @@ public class GridController : MonoBehaviour {
     {
         if (x < 0 || z < 0 || x > gridWidth - 1 || z > gridHeight - 1) return false;
         return true;
+    }
+
+    public void OnBlockLanded(GameObject block)
+    {
+        // Check if we hit some dude
+        foreach (GameObject dude in dudes)
+        {
+            // skip dead
+            if (!dude.activeSelf) continue;
+
+            float dist = Vector3.Distance(dude.transform.position, block.transform.position);
+            if (dist < minKillDistance)
+            {
+                dude.GetComponent<DudeController>().Kill();
+                SpawnGraveStone(block);
+            }
+        }
     }
 
     void HideGhostWall()

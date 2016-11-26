@@ -7,6 +7,8 @@ public class BlockController : MonoBehaviour {
 
     private Vector3 initialPos;
 
+    private float spawnDelay;
+
     public float initialY;
 
 	// Use this for initialization
@@ -14,17 +16,23 @@ public class BlockController : MonoBehaviour {
 
     }
 
+    void Awake ()
+    {
+        
+    }
+
     // Called from GridController
     public void Spawn(float delay, bool randomDelay)
     {
-        if (randomDelay) StartCoroutine(WaitAndSpawn(Random.Range(0.0f, delay)));
-        else StartCoroutine(WaitAndSpawn(delay));
+        if (randomDelay) spawnDelay = Random.Range(0.0f, delay);
+        else spawnDelay = delay;
+        StartCoroutine(WaitAndSpawn(spawnDelay));
     }
 
     // Update is called once per frame
     void Update () {
-	
-	}
+        transform.position = transform.position;
+    }
 
     private IEnumerator WaitAndSpawn(float waitTime)
     {

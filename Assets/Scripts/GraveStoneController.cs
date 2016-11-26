@@ -60,7 +60,7 @@ public class GraveStoneController : MonoBehaviour {
         float duration = expPS.duration;
 
 
-        Destroy(expPS, duration);
+        Destroy(exp, 5.0f);
         Destroy(gameObject, duration  / 2);
     }
 

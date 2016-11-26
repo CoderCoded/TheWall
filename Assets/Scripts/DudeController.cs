@@ -8,15 +8,26 @@ public class DudeController : MonoBehaviour {
     public Vector3 startPosition { get; set; }
     private Vector3 deathPosition;
 
+    public Material[] materials;
+
+    public int dudeType;
+
 	// Use this for initialization
 	void Start () {
-	
+        dudeType = (int)Random.Range(0.0f, 5.0f);
+        GetComponent<Renderer>().material = materials[dudeType];
 	}
 	
 	// Update is called once per frame
 	void Update () {
 	
 	}
+
+    public void SetDudeType(int type)
+    {
+        dudeType = type;
+        GetComponent<Renderer>().material = materials[dudeType];
+    }
 
     /*
     void OnCollisionEnter(Collision collision)

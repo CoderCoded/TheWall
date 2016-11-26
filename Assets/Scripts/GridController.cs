@@ -30,7 +30,7 @@ public class GridController : MonoBehaviour {
     private int gridWidth;
     private int gridHeight;
 
-    public float brickSpawnInterval = 1.0f;
+    public float BlockSpawnInterval = 1.0f;
 
     private Collider groundCollider;
     public GameObject markerObject;
@@ -44,6 +44,8 @@ public class GridController : MonoBehaviour {
     private float minKillDistance = 1.0f;
 
     private bool explosionOnGoing = false;
+
+    public float explosionRadius = 5.0f;
 
     private WallDirection selectedDirection = WallDirection.xAxis;
 
@@ -72,7 +74,7 @@ public class GridController : MonoBehaviour {
         if (gridBlock == null) return;
 
         //StartCoroutine(SpawnSomeWalls(10, 2.0f));
-        //SpawnAllBricksRandom();
+        //SpawnAllBlocksRandom();
 
     }
 
@@ -112,13 +114,29 @@ public class GridController : MonoBehaviour {
         }
     }
 
-    void SpawnAllBricksRandom()
+    void DestroyBlocksOnRadius(int x, int z, float radius)
+    {
+        foreach (Transform t in gameObject.transform)
+        {
+            // all children
+            if (t.gameObject.GetComponent<BlockController>())
+            {
+                if (Vector3.Distance(t.localPosition, GetLocalPosFromGridPos(x, z)) < radius)
+                {
+                    // Destroy the block
+                    Destroy(t.gameObject);
+                }
+            }
+        }
+    }
+
+    void SpawnAllBlocksRandom()
     {
         for (int i = 0; i < gridHeight; i++)
         {
             for (int j = 0; j < gridWidth; j++)
             {
-                SpawnBrick(j, i, 5.0f, true);
+                SpawnBlock(j, i, 5.0f, true);
             }
         }
     }
@@ -150,7 +168,7 @@ public class GridController : MonoBehaviour {
         dudes.Add(dude);
     }
 
-    void SpawnBrick (int x, int z, float delay, bool randomDelay)
+    void SpawnBlock (int x, int z, float delay, bool randomDelay)
     {
         int index = gridWidth * z + x;
         //Debug.Log(string.Format("X: {0}, Z: {1}, Index: {2}", x, z, index));
@@ -211,7 +229,7 @@ public class GridController : MonoBehaviour {
 
                 float delayFactor = i - startX;
 
-                SpawnBrick(i, startZ, brickSpawnInterval * delayFactor, false);
+                SpawnBlock(i, startZ, BlockSpawnInterval * delayFactor, false);
             }
             if (startX - 1 >= 0)
             {
@@ -223,7 +241,7 @@ public class GridController : MonoBehaviour {
                     if (grid[index] != null) break;
 
                     float delayFactor = (startX - j) + 1.0f;
-                    SpawnBrick(j, startZ, brickSpawnInterval * delayFactor, false);
+                    SpawnBlock(j, startZ, BlockSpawnInterval * delayFactor, false);
                 }
             }
         }
@@ -238,7 +256,7 @@ public class GridController : MonoBehaviour {
 
                 float delayFactor = k - startX;
 
-                SpawnBrick(startX, k, brickSpawnInterval * delayFactor, false);
+                SpawnBlock(startX, k, BlockSpawnInterval * delayFactor, false);
             }
             if (startZ - 1 >= 0)
             {
@@ -250,7 +268,7 @@ public class GridController : MonoBehaviour {
                     if (grid[index] != null) break;
 
                     float delayFactor = (startZ - l) + 1.0f;
-                    SpawnBrick(startX, l, brickSpawnInterval * delayFactor, false);
+                    SpawnBlock(startX, l, BlockSpawnInterval * delayFactor, false);
                 }
             }
         }
@@ -325,6 +343,7 @@ public class GridController : MonoBehaviour {
         explosionOnGoing = true;
         GameObject dude = graveStoneController.dude;
         graveStoneController.Explode();
+        DestroyBlocksOnRadius(graveStoneController.x, graveStoneController.z, explosionRadius);
         yield return new WaitForSeconds(2.0f);
         dude.GetComponent<DudeController>().Respawn();
         yield return new WaitForSeconds(1.0f);

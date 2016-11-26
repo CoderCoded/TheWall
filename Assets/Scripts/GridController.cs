@@ -1,6 +1,8 @@
 ﻿using UnityEngine;
 using System.Collections;
 using System.Collections.Generic;
+using UnityEngine.UI;
+
 
 using DigitalRuby.Tween;
 
@@ -49,6 +51,9 @@ public class GridController : MonoBehaviour {
 
     private WallDirection selectedDirection = WallDirection.xAxis;
 
+    public int dudeCount = 6;
+    public int differentDudes = 2;
+
     // Use this for initialization
     void Start () {
 
@@ -69,7 +74,7 @@ public class GridController : MonoBehaviour {
 
         dudes = new List<GameObject>();
 
-        if (testDude != null) SpawnSomeDudes(50);
+        if (testDude != null) SpawnSomeDudes(dudeCount);
 
         if (gridBlock == null) return;
 
@@ -165,6 +170,7 @@ public class GridController : MonoBehaviour {
         //Dude.transform.localPosition = new Vector3(gridSpacing * x, initialY, gridSpacing * z);
         dude.GetComponent<DudeController>().startPosition = startPos;
         dude.SetActive(true);
+        dude.GetComponent<DudeController>().SetRandomType(differentDudes);
         dudes.Add(dude);
     }
 
@@ -297,11 +303,17 @@ public class GridController : MonoBehaviour {
         return gameObject.transform.TransformPoint(localPos);
     }
 
+    private int framesMouseDown = 0;
+
+    public int frameLimitForCancel = 50;
+
     // Update is called once per frame
     void Update () {
 
         if (Input.GetMouseButton(0))
         {
+            framesMouseDown++;
+
             RaycastHit hit;
             Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
             if (groundCollider.Raycast(ray, out hit, Mathf.Infinity))
@@ -331,7 +343,10 @@ public class GridController : MonoBehaviour {
         } else if (showingMarker)
         {
             HideMarker();
-            SpawnWall(lastX, lastZ, selectedDirection);
+
+
+            if (framesMouseDown > frameLimitForCancel) SpawnWall(lastX, lastZ, selectedDirection);
+            framesMouseDown = 0;
             lastX = -1;
             lastZ = -1;
         }
@@ -409,6 +424,10 @@ public class GridController : MonoBehaviour {
 
     void ShowMarker(int x, int z)
     {
+        if (framesMouseDown < frameLimitForCancel)
+        {
+            return;
+        }
         if (explosionOnGoing) return;
         if (IsOnGrid(x, z))
         {
@@ -420,18 +439,24 @@ public class GridController : MonoBehaviour {
         else
         {
             HideMarker();
+            framesMouseDown = 0;
         }
     }
+
+    public Sprite xAxisSprite;
+    public Sprite zAxisSprite;
 
     public void ToggleDirection ()
     {
         if (selectedDirection == WallDirection.xAxis)
         {
             selectedDirection = WallDirection.zAxis;
+            GameObject.Find("ToggleButton").GetComponent<Image>().sprite = zAxisSprite;
         }
         else
         {
             selectedDirection = WallDirection.xAxis;
+            GameObject.Find("ToggleButton").GetComponent<Image>().sprite = xAxisSprite;
         }
     }
 }

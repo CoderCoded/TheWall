@@ -14,8 +14,7 @@ public class DudeController : MonoBehaviour {
 
 	// Use this for initialization
 	void Start () {
-        dudeType = (int)Random.Range(0.0f, 5.0f);
-        GetComponent<Renderer>().material = materials[dudeType];
+        //SetDudeType(0);
 	}
 	
 	// Update is called once per frame
@@ -23,8 +22,16 @@ public class DudeController : MonoBehaviour {
 	
 	}
 
+    public void SetRandomType(int maxType)
+    {
+        //Debug.Log(string.Format("Got maxtype {0}", maxType));
+        int randType = (int)Random.Range(0.0f, (float)(maxType));
+        SetDudeType(randType);
+    }
+
     public void SetDudeType(int type)
     {
+        Debug.Log(string.Format("Setting dudetype: {0}", type));
         dudeType = type;
         GetComponent<Renderer>().material = materials[dudeType];
     }

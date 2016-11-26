@@ -316,6 +316,27 @@ public class GridController : MonoBehaviour {
 
             RaycastHit hit;
             Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
+
+            if (Physics.Raycast(ray, out hit))
+            {
+                if (hit.collider != null)
+                {
+                    Debug.Log("Tag " + hit.collider.gameObject.tag);
+                    if (hit.collider.gameObject.tag == "GraveStone")
+                    {
+                        if (Input.GetMouseButtonDown(0))
+                        {
+                            GraveStoneController graveStoneController = hit.collider.gameObject.GetComponent<GraveStoneController>();
+                            if (graveStoneController != null)
+                            {
+                                HideMarker();
+                                StartCoroutine(ExplodeGraveStoneAndRespawnDude(graveStoneController));
+                                return;
+                            }
+                        }
+                    }
+                }
+            }
             if (groundCollider.Raycast(ray, out hit, Mathf.Infinity))
             {
                 Vector3 gridPos = GetGridPositionFromWorldPos(hit.point);
@@ -325,19 +346,8 @@ public class GridController : MonoBehaviour {
                 lastX = (int)gridPos.x;
                 lastZ = (int)gridPos.z;
 
-                if (Input.GetMouseButtonDown(0))
-                {
-                    GraveStoneController graveStoneController = GetGraveStoneController(lastX, lastZ);
-                    if (graveStoneController != null)
-                    {
-                        HideMarker();
-                        StartCoroutine(ExplodeGraveStoneAndRespawnDude(graveStoneController));
-                    }
-                }
-                else
-                {
-                    ShowMarker(lastX, lastZ);
-                }
+
+                ShowMarker(lastX, lastZ);
 
             }
         } else if (showingMarker)
@@ -458,5 +468,10 @@ public class GridController : MonoBehaviour {
             selectedDirection = WallDirection.xAxis;
             GameObject.Find("ToggleButton").GetComponent<Image>().sprite = xAxisSprite;
         }
+    }
+
+    public void Restart ()
+    {
+        Debug.Log("Restart");
     }
 }

@@ -14,13 +14,11 @@ public enum WallDirection
 public class GridController : MonoBehaviour {
 
     public GameObject gridBlock;
-
     public GameObject testDude;
-
     public GameObject graveStone;
 
     private GameObject[] grid;
-
+    private int[] statusGrid;
     private List<GameObject> dudes;
 
     public Vector2 gridSize = new Vector2(40, 40);
@@ -70,17 +68,53 @@ public class GridController : MonoBehaviour {
 
         gameObject.transform.position = new Vector3(-gridSize.x / 2 + 0.5f, 0.0f, -gridSize.y / 2 + 0.5f);
 
+        Init();
+    }
+
+    void Init ()
+    {
         grid = new GameObject[gridWidth * gridHeight];
+        statusGrid = new int[gridWidth * gridHeight];
 
         dudes = new List<GameObject>();
 
         if (testDude != null) SpawnSomeDudes(dudeCount);
-
         if (gridBlock == null) return;
+    }
 
-        //StartCoroutine(SpawnSomeWalls(10, 2.0f));
-        //SpawnAllBlocksRandom();
+    void ClearGrid()
+    {
+        foreach (Transform child in gameObject.transform)
+        {
+            // Keep some
+            if (child.gameObject == markerObject) continue;
+            if (child.gameObject == ghostWall) continue;
+            // Destroy rest
+            Destroy(child.gameObject);
+        }
+    }
 
+    public int[] GetStatusGrid()
+    {
+        if (grid == null) return null;
+        GameObject current;
+        for (int i = 0; i < grid.Length; i++)
+        {
+            current = grid[i];
+            if (current == null)
+            {
+                statusGrid[i] = 0;
+            }
+            else if (current.tag == "GraveStone")
+            {
+                statusGrid[i] = 2;
+            }
+            else
+            {
+                statusGrid[i] = 1;
+            }
+        }
+        return statusGrid;
     }
 
     void SpawnSomeDudes(int count)
@@ -473,5 +507,7 @@ public class GridController : MonoBehaviour {
     public void Restart ()
     {
         Debug.Log("Restart");
+        ClearGrid();
+        Init();
     }
 }

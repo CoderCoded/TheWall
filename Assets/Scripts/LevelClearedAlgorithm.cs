@@ -13,8 +13,19 @@ public class LevelClearedAlgorithm : MonoBehaviour {
     private List<int> visited;
     private List<List<int>> spans;
 
+    private GridController gridController;
+
     // Use this for initialization
     void Start () {
+
+        gridController = GameObject.Find("Grid").GetComponent<GridController>();
+
+        gridSize = gridController.gridSize;
+
+        gridWidth = (int)gridSize.x;
+        gridHeight = (int)gridSize.y;
+
+        /*
         gridWidth = (int)gridSize.x;
         gridHeight = (int)gridSize.y;
         grid = new int[] {
@@ -32,12 +43,44 @@ public class LevelClearedAlgorithm : MonoBehaviour {
             }
         }
         Debug.Log(areas);
+        */
+
+        // This is too heavy... needs optimization
+        //StartCoroutine(PollStatus());
     }   
 	
 	// Update is called once per frame
 	void Update () {
 	
 	}
+
+    IEnumerator PollStatus()
+    {
+        while (true)
+        {
+            yield return new WaitForSeconds(1.0f);
+            CheckStatus();
+        }
+    }
+
+    void CheckStatus()
+    {
+        grid = gridController.GetStatusGrid();
+
+        if (grid == null) return;
+
+        spans = getSpans(grid);
+        List<List<int>> areas = new List<List<int>>();
+        visited = new List<int>();
+        for (int i = 0; i < spans.Count; i++)
+        {
+            if (!visited.Contains(i))
+            {
+                areas.Add(recursiveMerge(i));
+            }
+        }
+
+    }
 
     List<int> recursiveMerge(int index) {
         // create neighbour indexes for comparison
